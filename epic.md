@@ -1,0 +1,2 @@
+Die Webseite https://www.nahverkehrhamburg.de/hvv-stoerungen-heute/ enthält aktuelle Störungsmeldungen des HVV. Sie enthält allerdings auch für mich irrelavanteInformationen und ein störendes Popup. 
+Ich benötige eine Möglichkeit, die Informationen der Webseite abzurufen und zu filtern. Das Popup soll herausgefiltert werden. In der Ergebniswebseite sollen nur die gelben und roten Kacheln mit den Störungsmeldungen enthalten sein. 

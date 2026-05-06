@@ -1,0 +1,28 @@
+# ---------------------------------------------------------------------------
+# HVV Störungen — configuration.yaml snippet
+# Merge these sections into your existing /config/configuration.yaml
+# ---------------------------------------------------------------------------
+
+shell_command:
+  hvv_scraper: "python3 /config/hvv_scraper.py --output /config/www/hvv_tiles.html"
+
+automation:
+  - alias: "HVV Störungen aktualisieren"
+    description: "Fetches and filters the HVV disruption page every 5 minutes."
+    trigger:
+      - platform: time_pattern
+        minutes: "/5"
+    action:
+      - service: shell_command.hvv_scraper
+
+# ---------------------------------------------------------------------------
+# Lovelace resource registration
+# Either add to configuration.yaml (yaml mode) or register via the UI:
+#   Settings → Dashboards → Resources → Add resource
+#   URL: /local/hvv-stoerungen-card.js  Type: JavaScript module
+# ---------------------------------------------------------------------------
+
+lovelace:
+  resources:
+    - url: /local/hvv-stoerungen-card.js
+      type: module

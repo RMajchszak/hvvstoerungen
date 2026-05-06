@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://www.nahverkehrhamburg.de/wp-content/themes/hvv/style.css">
+  <link rel="stylesheet" href="https://www.nahverkehrhamburg.de/wp-content/plugins/hvv-plugin/hvv.css">
+</head>
+<body>
+
+<!-- Mailster newsletter popup (must be excluded from output) -->
+<div class="mailster-block-form-type-popup wp-block-mailster-form-outside-wrapper">
+  <form><input type="email" placeholder="E-Mail"><button>Abonnieren</button></form>
+</div>
+
+<!-- Navigation / header (irrelevant) -->
+<nav id="site-navigation"><a href="/">Home</a></nav>
+
+<!-- Update timestamp -->
+<div class="hvv-view-header">
+  <p class="last-update-notice">
+    <span class="live-indicator"></span> Stand: 17:40 Uhr
+  </p>
+</div>
+
+<!-- Disruption cards grid -->
+<div class="line-overview-grid-basic problem-lines">
+
+  <!-- RED card 1 -->
+  <div class="hvv-line-card status-red"
+       data-line-key="AKN:A2_AKN_AKN___"
+       data-sort-ampel="red"
+       data-sort-name="A2">
+    <span class="line-badge">A2</span>
+    <span class="line-status-text">Ausfall</span>
+    <!-- KPI span that also carries status-red (must NOT be selected as a tile) -->
+    <div class="kpi-item">
+      <span class="kpi-value status-red">+10 Min</span>
+    </div>
+  </div>
+
+  <!-- RED card 2 -->
+  <div class="hvv-line-card status-red"
+       data-line-key="DB:S1_DB___"
+       data-sort-ampel="red"
+       data-sort-name="S1">
+    <span class="line-badge">S1</span>
+    <span class="line-status-text">Störung</span>
+  </div>
+
+  <!-- YELLOW card 1 -->
+  <div class="hvv-line-card status-yellow"
+       data-line-key="HHA:U2_HHA___"
+       data-sort-ampel="yellow"
+       data-sort-name="U2">
+    <span class="line-badge">U2</span>
+    <span class="line-status-text">Verspätung</span>
+    <div class="kpi-item">
+      <span class="kpi-value status-yellow">4 von 8</span>
+    </div>
+  </div>
+
+  <!-- GREEN card (must be excluded from output) -->
+  <div class="hvv-line-card status-green"
+       data-line-key="HHA:U1_HHA___"
+       data-sort-ampel="green"
+       data-sort-name="U1">
+    <span class="line-badge">U1</span>
+    <span class="line-status-text">Pünktlich</span>
+  </div>
+
+</div>
+
+<!-- Footer (irrelevant) -->
+<footer><p>Impressum</p></footer>
+
+</body>
+</html>
