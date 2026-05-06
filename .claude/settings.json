@@ -1,0 +1,158 @@
+{
+  "apiKeyHelper": "~/.claude/get-api-key.sh",
+  "enabledPlugins": {},
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://adesso-ai-hub.3asabc.de"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c \"./.claude/hooks/post-command/log-tool-result.sh 2\u003e/dev/null || true\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c \"./.claude/hooks/post-command/format-code.sh 2\u003e/dev/null || true\""
+          },
+          {
+            "type": "command",
+            "command": "bash -c \"./.claude/hooks/post-command/lint-code.sh 2\u003e/dev/null || true\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c \"./.claude/hooks/post-command/format-code.sh 2\u003e/dev/null || true\""
+          },
+          {
+            "type": "command",
+            "command": "bash -c \"./.claude/hooks/post-command/lint-code.sh 2\u003e/dev/null || true\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c \"./.claude/hooks/pre-command/log-tool-use.sh 2\u003e/dev/null || true\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ./.claude/hooks/pre-command/check-sensitive-path.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ./.claude/hooks/pre-command/check-sensitive-path.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c \"if [ -d .beads ]; then bd prime 2\u003e/dev/null || true; fi\""
+          },
+          {
+            "type": "command",
+            "command": "bash -c \"./.claude/hooks/pre-command/check-toolchain.sh 2\u003e/dev/null || true\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c \"if [ -d .beads ]; then bd sync 2\u003e/dev/null || true; fi\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(git pull:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
+      "Bash(gh:*)",
+      "Bash(bd:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(tree:*)",
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(npm install)",
+      "Bash(yarn:*)",
+      "Bash(pnpm:*)",
+      "Bash(go test:*)",
+      "Bash(go build:*)",
+      "Bash(go run:*)",
+      "Bash(go mod:*)",
+      "Bash(go fmt:*)",
+      "Bash(go vet:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo run:*)",
+      "Bash(pytest:*)",
+      "Bash(python:*)",
+      "Bash(make:*)",
+      "Bash(./.claude/skills/beads-ralph-dagger/scripts/*.sh:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/credentials.*)",
+      "Read(./**/*secret*)",
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(git push --force)",
+      "Bash(git push -f)",
+      "Bash(git reset --hard)",
+      "Bash(curl * | sh)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)",
+      "Bash(wget * | bash)"
+    ]
+  }
+}

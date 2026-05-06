@@ -1,0 +1,14 @@
+# Container-use configuration
+# See: https://github.com/dagger/container-use
+
+# Default container image for development
+image: golang:1.21
+
+# Mount the current directory into the container
+mounts:
+  - source: .
+    target: /workspace
+
+# Environment variables
+env:
+  - GOPROXY=https://proxy.golang.org,direct

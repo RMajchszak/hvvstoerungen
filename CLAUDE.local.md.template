@@ -1,0 +1,21 @@
+# CLAUDE.local.md (Personal Preferences)
+
+This file is gitignored. Use it for personal preferences that shouldn't be shared.
+
+## Personal Preferences
+
+<!-- Add your personal preferences here, for example: -->
+
+<!-- Preferred communication style -->
+<!-- - Be concise in responses -->
+<!-- - Use bullet points for lists -->
+
+<!-- Personal shortcuts -->
+<!-- - I prefer tabs over spaces -->
+<!-- - I like detailed commit messages -->
+
+## Local Environment
+
+<!-- Document your local setup if needed -->
+<!-- - Database running on port 5433 -->
+<!-- - Using Docker for Redis -->

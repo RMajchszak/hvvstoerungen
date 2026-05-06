@@ -1,0 +1,358 @@
+# Toolchain Detection and Configuration
+# Language-agnostic tool command mappings
+version: "1.0.0"
+
+# Detection priority (highest to lowest)
+detection:
+  priority:
+    - explicit_override   # CLAUDE_TOOLCHAIN env var
+    - marker_files        # package.json, Cargo.toml, etc.
+    - file_extensions     # Fallback scan
+
+# Marker file mappings for language detection
+markers:
+  javascript:
+    files: ["package.json", "yarn.lock", "pnpm-lock.yaml"]
+    weight: 100
+  typescript:
+    files: ["tsconfig.json"]
+    weight: 110
+  python:
+    files: ["pyproject.toml", "setup.py", "requirements.txt", "Pipfile"]
+    weight: 100
+  rust:
+    files: ["Cargo.toml"]
+    weight: 100
+  go:
+    files: ["go.mod"]
+    weight: 100
+  java:
+    files: ["pom.xml", "build.gradle", "build.gradle.kts"]
+    weight: 100
+  ruby:
+    files: ["Gemfile"]
+    weight: 100
+  php:
+    files: ["composer.json"]
+    weight: 100
+  dotnet:
+    files: ["*.csproj", "*.fsproj", "*.sln"]
+    weight: 100
+
+# Tool command definitions per language
+tools:
+  javascript:
+    package_manager:
+      detect: ["pnpm-lock.yaml:pnpm", "yarn.lock:yarn", "package-lock.json:npm"]
+      default: "npm"
+    commands:
+      install: "${PM} install"
+      test: "${PM} test"
+      lint: "${PM} run lint"
+      format: "${PM} run format"
+      build: "${PM} run build"
+      typecheck: "${PM} run typecheck"
+
+  typescript:
+    inherits: javascript
+    commands:
+      typecheck: "npx tsc --noEmit"
+
+  python:
+    package_manager:
+      detect: ["poetry.lock:poetry", "Pipfile.lock:pipenv"]
+      default: "pip"
+    commands:
+      install: "${PM} install"
+      test: "pytest"
+      lint: "ruff check ."
+      format: "ruff format ."
+      build: "python -m build"
+      typecheck: "mypy ."
+
+  rust:
+    commands:
+      install: "cargo build"
+      test: "cargo test"
+      lint: "cargo clippy"
+      format: "cargo fmt"
+      build: "cargo build --release"
+      typecheck: "cargo check"
+
+  go:
+    commands:
+      install: "go mod download"
+      test: "go test ./..."
+      lint: "golangci-lint run"
+      format: "gofmt -w ."
+      build: "go build ./..."
+      typecheck: "go vet ./..."
+
+  java:
+    package_manager:
+      detect: ["pom.xml:mvn", "build.gradle:gradle"]
+      default: "mvn"
+    commands:
+      install: "${PM} install"
+      test: "${PM} test"
+      lint: "${PM} checkstyle:check"
+      build: "${PM} package"
+
+  ruby:
+    commands:
+      install: "bundle install"
+      test: "bundle exec rspec"
+      lint: "bundle exec rubocop"
+      format: "bundle exec rubocop -a"
+
+  generic:
+    commands:
+      install: "echo 'Configure install command in toolchain.yaml'"
+      test: "echo 'Configure test command in toolchain.yaml'"
+      lint: "echo 'Configure lint command in toolchain.yaml'"
+      format: "echo 'Configure format command in toolchain.yaml'"
+      build: "echo 'Configure build command in toolchain.yaml'"
+
+# Environment variable overrides
+# Set these to override auto-detection:
+# CLAUDE_TOOLCHAIN=python
+# CLAUDE_CMD_TEST="pytest -v"
+# CLAUDE_CMD_LINT="flake8 ."
+
+# =============================================================================
+# Infrastructure & DevOps CLI Tools
+# =============================================================================
+# These tools are language-agnostic and available across all project types.
+# Claude should proactively use these when working with cloud, git, or k8s.
+
+infrastructure:
+  # Cloud Provider CLIs
+  cloud:
+    azure:
+      cli: az
+      markers: [".azure/", "azure-pipelines.yml", "bicep.config"]
+      context: "az account show"
+      common_patterns:
+        - "az login"
+        - "az account set --subscription <name>"
+        - "az group list"
+        - "az resource list --resource-group <rg>"
+        - "az webapp list"
+        - "az aks list"
+        - "az storage account list"
+      destructive_commands: ["az group delete", "az resource delete", "az aks delete"]
+
+    aws:
+      cli: aws
+      markers: [".aws/", "samconfig.toml", "template.yaml", "cdk.json"]
+      context: "aws sts get-caller-identity"
+      common_patterns:
+        - "aws configure list"
+        - "aws s3 ls"
+        - "aws ec2 describe-instances"
+        - "aws lambda list-functions"
+        - "aws ecs list-clusters"
+        - "aws cloudformation list-stacks"
+      destructive_commands: ["aws ec2 terminate-instances", "aws s3 rm", "aws cloudformation delete-stack"]
+
+    gcp:
+      cli: gcloud
+      markers: [".gcloud/", "app.yaml", "cloudbuild.yaml"]
+      context: "gcloud config list"
+      common_patterns:
+        - "gcloud auth list"
+        - "gcloud projects list"
+        - "gcloud compute instances list"
+        - "gcloud run services list"
+        - "gcloud container clusters list"
+        - "gcloud functions list"
+      destructive_commands: ["gcloud compute instances delete", "gcloud projects delete"]
+
+  # Git Platform CLIs
+  git_platforms:
+    github:
+      cli: gh
+      markers: [".github/"]
+      context: "gh auth status"
+      common_patterns:
+        - "gh repo view"
+        - "gh pr list"
+        - "gh pr view <number>"
+        - "gh pr create --title '<title>' --body '<body>'"
+        - "gh pr merge <number>"
+        - "gh issue list"
+        - "gh issue create --title '<title>' --body '<body>'"
+        - "gh run list"
+        - "gh run view <run-id>"
+        - "gh release list"
+
+    gitlab:
+      cli: glab
+      markers: [".gitlab-ci.yml", ".gitlab/"]
+      context: "glab auth status"
+      common_patterns:
+        - "glab repo view"
+        - "glab mr list"
+        - "glab mr view <number>"
+        - "glab mr create --title '<title>' --description '<body>'"
+        - "glab issue list"
+        - "glab issue create --title '<title>' --description '<body>'"
+        - "glab ci list"
+        - "glab ci view <pipeline-id>"
+
+  # Container & Orchestration
+  kubernetes:
+    kubectl:
+      cli: kubectl
+      markers: ["k8s/", "kubernetes/", "manifests/", "kustomization.yaml"]
+      context: "kubectl config current-context"
+      common_patterns:
+        - "kubectl get pods"
+        - "kubectl get services"
+        - "kubectl get deployments"
+        - "kubectl describe pod <name>"
+        - "kubectl logs <pod> [-f]"
+        - "kubectl apply -f <file>"
+        - "kubectl get events --sort-by=.lastTimestamp"
+        - "kubectl top pods"
+        - "kubectl exec -it <pod> -- /bin/sh"
+      destructive_commands: ["kubectl delete"]
+      safety_flags: ["--dry-run=client", "--dry-run=server"]
+
+    helm:
+      cli: helm
+      markers: ["Chart.yaml", "charts/", "helmfile.yaml"]
+      context: "helm list"
+      common_patterns:
+        - "helm repo list"
+        - "helm repo update"
+        - "helm search repo <name>"
+        - "helm list --all-namespaces"
+        - "helm status <release>"
+        - "helm install <name> <chart>"
+        - "helm upgrade <name> <chart>"
+        - "helm rollback <name> <revision>"
+        - "helm template <name> <chart>"
+      destructive_commands: ["helm uninstall", "helm delete"]
+      safety_flags: ["--dry-run"]
+
+    kustomize:
+      cli: kustomize
+      markers: ["kustomization.yaml"]
+      common_patterns:
+        - "kustomize build ."
+        - "kustomize build . | kubectl apply -f -"
+
+  # Infrastructure as Code
+  iac:
+    terraform:
+      cli: terraform
+      markers: ["*.tf", "terraform.tfstate", ".terraform/"]
+      context: "terraform workspace show"
+      common_patterns:
+        - "terraform init"
+        - "terraform plan"
+        - "terraform apply"
+        - "terraform state list"
+        - "terraform output"
+        - "terraform validate"
+        - "terraform fmt"
+      destructive_commands: ["terraform destroy", "terraform apply -auto-approve"]
+      safety_flags: ["-target=<resource>"]
+
+    pulumi:
+      cli: pulumi
+      markers: ["Pulumi.yaml", "Pulumi.*.yaml"]
+      context: "pulumi whoami && pulumi stack"
+      common_patterns:
+        - "pulumi preview"
+        - "pulumi up"
+        - "pulumi stack ls"
+        - "pulumi config"
+        - "pulumi logs"
+      destructive_commands: ["pulumi destroy"]
+
+    ansible:
+      cli: ansible
+      markers: ["ansible.cfg", "playbook.yml", "inventory/", "roles/"]
+      common_patterns:
+        - "ansible-inventory --list"
+        - "ansible all -m ping"
+        - "ansible-playbook playbook.yml"
+        - "ansible-playbook playbook.yml --check"
+      safety_flags: ["--check", "--diff"]
+
+  # Container Tools
+  containers:
+    docker:
+      cli: docker
+      markers: ["Dockerfile", "docker-compose.yml", "compose.yaml"]
+      context: "docker context show"
+      common_patterns:
+        - "docker ps"
+        - "docker images"
+        - "docker build -t <name> ."
+        - "docker run <image>"
+        - "docker logs <container>"
+        - "docker exec -it <container> /bin/sh"
+        - "docker compose up"
+        - "docker compose down"
+      destructive_commands: ["docker system prune", "docker rmi", "docker rm"]
+
+    podman:
+      cli: podman
+      markers: ["Containerfile"]
+      common_patterns:
+        - "podman ps"
+        - "podman images"
+        - "podman build -t <name> ."
+        - "podman run <image>"
+
+  # Utility Tools
+  utilities:
+    jq:
+      cli: jq
+      description: "JSON processor - use for parsing CLI output"
+      common_patterns:
+        - "| jq '.'"
+        - "| jq '.items[]'"
+        - "| jq -r '.name'"
+        - "| jq 'select(.status == \"Running\")'"
+
+    yq:
+      cli: yq
+      description: "YAML processor"
+      common_patterns:
+        - "yq '.metadata.name' file.yaml"
+        - "yq -i '.spec.replicas = 3' deployment.yaml"
+
+    curl:
+      cli: curl
+      description: "HTTP client for API testing"
+      common_patterns:
+        - "curl -s <url> | jq '.'"
+        - "curl -X POST -H 'Content-Type: application/json' -d '<json>' <url>"
+
+# =============================================================================
+# Infrastructure Detection
+# =============================================================================
+# Auto-detect which infrastructure tools are relevant for this project
+
+infrastructure_detection:
+  # Scan for marker files/directories to determine relevant tools
+  scan_paths:
+    - "."
+    - ".github/"
+    - ".gitlab/"
+    - ".azure/"
+    - "k8s/"
+    - "kubernetes/"
+    - "terraform/"
+    - "infrastructure/"
+    - "deploy/"
+
+  # Report available tools on /status
+  report_context: true
+
+  # Warn before destructive commands
+  safety_warnings: true

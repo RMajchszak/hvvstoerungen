@@ -1,0 +1,7 @@
+# Ralph Loop Configuration
+# See: internal/ralph/README.md for documentation
+
+max_iterations: 100
+timeout_minutes: 60
+heartbeat_secs: 30
+stuck_threshold: 5

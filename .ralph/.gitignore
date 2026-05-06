@@ -1,0 +1,9 @@
+# Runtime files (not committed)
+ralph-status.json
+ralph-heartbeat
+ralph-loop.log
+
+# Templates and config are committed
+!config.yaml
+!stop-hook.sh
+!status.json.template

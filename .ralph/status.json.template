@@ -1,0 +1,12 @@
+{
+  "status": "idle",
+  "iteration": 0,
+  "max_iterations": 100,
+  "start_time": null,
+  "last_heartbeat": null,
+  "current_task": null,
+  "tasks_completed": 0,
+  "tasks_blocked": 0,
+  "error": null,
+  "message": null
+}
