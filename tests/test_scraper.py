@@ -18,6 +18,7 @@ from hvv_scraper import (
     extract_stylesheets,
     extract_tiles,
     fetch_page,
+    main,
     write_output,
 )
 
@@ -120,7 +121,7 @@ def test_build_html_contains_last_update(sample_soup):
     assert "Stand: 17:40 Uhr" in html
 
 
-def test_build_html_with_no_last_update(sample_soup):
+def test_build_html_with_no_last_update():
     # Should not crash when last_update is None
     html = build_html([], [], None, "17:40 Uhr")
     assert "abgerufen" in html
@@ -159,3 +160,21 @@ def test_fetch_page_raises_on_404(requests_mock):
     requests_mock.get(URL, status_code=404)
     with pytest.raises(requests.HTTPError):
         fetch_page(URL)
+
+
+# --- main --------------------------------------------------------------------
+
+def test_main_exits_on_fetch_error(monkeypatch, requests_mock, tmp_path):
+    requests_mock.get(URL, status_code=500)
+    monkeypatch.setattr("sys.argv", ["hvv_scraper.py", "--output", str(tmp_path / "out.html")])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 1
+
+
+def test_main_exits_on_write_error(monkeypatch, requests_mock):
+    requests_mock.get(URL, text="<html/>")
+    monkeypatch.setattr("sys.argv", ["hvv_scraper.py", "--output", "/nonexistent_root/path/out.html"])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 1

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 from datetime import datetime
+from html import escape
 from pathlib import Path
 
 import requests
@@ -46,8 +47,8 @@ def build_html(
 ) -> str:
     css_links = "\n".join(str(tag) for tag in stylesheets)
     tile_html = "\n".join(str(t) for t in tiles)
-    update_text = last_update or ""
-    update_line = f"<p class='update-notice'>{update_text} · abgerufen {fetched_at}</p>"
+    update_text = escape(last_update or "")
+    update_line = f"<p class='update-notice'>{update_text} · abgerufen {escape(fetched_at)}</p>"
     return f"""<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="UTF-8">
@@ -68,7 +69,9 @@ def build_html(
 
 
 def write_output(html: str, path: str) -> None:
-    Path(path).write_text(html, encoding="utf-8")
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(html, encoding="utf-8")
 
 
 def parse_args() -> argparse.Namespace:
