@@ -1,13 +1,13 @@
 # HVV Störungen — Installationsanleitung
 
 Zeigt nur die gelben und roten Störungsmeldungen des HVV als Custom Lovelace Card
-im Home Assistant Dashboard. Kein Add-on erforderlich.
+im Home Assistant Dashboard. Kein Add-on, kein Terminal-Zugang erforderlich.
 
 ## Funktionsweise
 
 ```
-HA Automation (alle 5 min)
-  → shell_command: python3 hvv_scraper.py
+pyscript (läuft alle 5 min automatisch via @time_trigger)
+  → hvv_scraper.py fetcht nahverkehrhamburg.de
       → schreibt /config/www/hvv_tiles.html
           → Lovelace Card liest /local/hvv_tiles.html
               → zeigt gefilterte Kacheln im Dashboard
@@ -16,43 +16,46 @@ HA Automation (alle 5 min)
 Das Popup und alle grünen Kacheln werden herausgefiltert.
 Die Original-CSS der HVV-Seite wird eingebunden, damit das Styling erhalten bleibt.
 
+Das Skript verwendet ausschließlich Python-Standardbibliotheken (`urllib`, `re`, `os`) —
+es müssen **keine Pakete per pip installiert** werden.
+
+---
+
+## Voraussetzung: HACS installieren
+
+Falls HACS noch nicht installiert ist:
+→ https://hacs.xyz/docs/use/download/download/
+
 ---
 
 ## Installation
 
-### 1. Dateien auf den HA-Host kopieren
+### 1. pyscript via HACS installieren
 
-```bash
-cp hvv_scraper.py         /config/hvv_scraper.py
-mkdir -p /config/www
-cp hvv-stoerungen-card.js /config/www/hvv-stoerungen-card.js
-```
+1. HACS → Integrations → Explore & Download Repositories
+2. Suche nach **pyscript**
+3. Download → Restart Home Assistant
 
-### 2. Python-Abhängigkeiten installieren
+### 2. Dateien anlegen
 
-Im Terminal-Add-on oder per SSH:
+Über den **File Editor** (oder Studio Code Server) Add-on:
 
-```bash
-pip3 install requests beautifulsoup4 lxml
-```
+| Quelldatei | Ziel in HA |
+|---|---|
+| `ha_config/hvv_pyscript.py` | `/config/pyscript/hvv_scraper.py` |
+| `hvv-stoerungen-card.js` | `/config/www/hvv-stoerungen-card.js` |
+
+Den Ordner `/config/pyscript/` anlegen, falls er noch nicht existiert.
+Den Ordner `/config/www/` anlegen, falls er noch nicht existiert.
 
 ### 3. configuration.yaml ergänzen
 
 Inhalte aus `configuration_snippet.yaml` in `/config/configuration.yaml` einfügen.
-Vorhandene `shell_command:`, `automation:` und `lovelace:` Blöcke
-zusammenführen — nicht doppelt anlegen.
+Vorhandenen `lovelace:` Block zusammenführen — nicht doppelt anlegen.
 
 ```yaml
-shell_command:
-  hvv_scraper: "python3 /config/hvv_scraper.py --output /config/www/hvv_tiles.html"
-
-automation:
-  - alias: "HVV Störungen aktualisieren"
-    trigger:
-      - platform: time_pattern
-        minutes: "/5"
-    action:
-      - service: shell_command.hvv_scraper
+pyscript:
+  allow_all_imports: true
 
 lovelace:
   resources:
@@ -60,9 +63,9 @@ lovelace:
       type: module
 ```
 
-**Alternativ** (Lovelace im UI-Modus):
-Settings → Dashboards → Resources → Add resource
-URL: `/local/hvv-stoerungen-card.js` · Type: JavaScript module
+> **Lovelace im UI-Modus** (kein YAML-Lovelace):
+> Settings → Dashboards → Resources → Add resource
+> URL: `/local/hvv-stoerungen-card.js` · Type: JavaScript module
 
 ### 4. Home Assistant neu starten
 
@@ -70,7 +73,9 @@ Developer Tools → Restart Home Assistant
 
 ### 5. Ersten Abruf manuell auslösen
 
-Developer Tools → Services → `shell_command.hvv_scraper` → Call Service
+Developer Tools → Actions → Action: `pyscript.hvv_scraper` → Perform Action
+
+Danach sollte `/config/www/hvv_tiles.html` existieren.
 
 ### 6. Card zum Dashboard hinzufügen
 
@@ -89,29 +94,28 @@ refresh_interval: 300   # Sekunden (Standard: 300 = 5 Minuten)
 
 ---
 
-## Dateien
+## Automatische Aktualisierung
 
-| Datei | Ziel auf HA-Host | Beschreibung |
-|---|---|---|
-| `hvv_scraper.py` | `/config/hvv_scraper.py` | Python-Scraper |
-| `hvv-stoerungen-card.js` | `/config/www/hvv-stoerungen-card.js` | Lovelace Card |
-| `ha_config/configuration_snippet.yaml` | in `/config/configuration.yaml` mergen | HA-Konfiguration |
-| `requirements.txt` | — | Python-Abhängigkeiten |
+Keine weitere Konfiguration nötig. Das Skript enthält `@time_trigger("cron(*/5 * * * *)")`
+und läuft automatisch alle 5 Minuten, sobald pyscript gestartet ist.
 
 ---
 
-## Scraper manuell testen
+## Dateien
 
-```bash
-python3 hvv_scraper.py --output /tmp/test.html
-open /tmp/test.html          # macOS
-xdg-open /tmp/test.html      # Linux
-```
+| Datei | Ziel in HA | Beschreibung |
+|---|---|---|
+| `ha_config/hvv_pyscript.py` | `/config/pyscript/hvv_scraper.py` | Scraper (pyscript, nur stdlib) |
+| `hvv-stoerungen-card.js` | `/config/www/hvv-stoerungen-card.js` | Lovelace Card |
+| `ha_config/configuration_snippet.yaml` | in `/config/configuration.yaml` mergen | pyscript + Lovelace Ressource |
 
-## Unit-Tests ausführen
+---
 
-```bash
-uv run --with requests --with beautifulsoup4 --with lxml \
-       --with pytest --with requests-mock \
-       pytest tests/ -v
-```
+## Fehlersuche
+
+Logs ansehen: Settings → System → Logs → Filter nach `hvv`
+
+Häufige Ursachen:
+- `/config/pyscript/` existiert nicht → Ordner anlegen, HA neu starten
+- pyscript nicht aktiv → `pyscript:` fehlt in `configuration.yaml`
+- `/config/www/` existiert nicht → wird beim ersten Lauf automatisch erstellt

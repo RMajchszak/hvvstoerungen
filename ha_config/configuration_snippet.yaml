@@ -3,21 +3,18 @@
 # Merge these sections into your existing /config/configuration.yaml
 # ---------------------------------------------------------------------------
 
-shell_command:
-  hvv_scraper: "python3 /config/hvv_scraper.py --output /config/www/hvv_tiles.html"
+# Enable pyscript (install via HACS first — see INSTALL.md)
+# allow_all_imports lets the script use stdlib modules (urllib, re, os, …)
+pyscript:
+  allow_all_imports: true
 
-automation:
-  - alias: "HVV Störungen aktualisieren"
-    description: "Fetches and filters the HVV disruption page every 5 minutes."
-    trigger:
-      - platform: time_pattern
-        minutes: "/5"
-    action:
-      - action: shell_command.hvv_scraper
+# No shell_command or automation needed — the script schedules itself
+# via @time_trigger("cron(*/5 * * * *)") and exposes itself as a service
+# via @service for manual calls from Developer Tools → Actions.
 
 # ---------------------------------------------------------------------------
 # Lovelace resource registration
-# Either add to configuration.yaml (yaml mode) or register via the UI:
+# Either add below (yaml mode) or register via the UI:
 #   Settings → Dashboards → Resources → Add resource
 #   URL: /local/hvv-stoerungen-card.js  Type: JavaScript module
 # ---------------------------------------------------------------------------
